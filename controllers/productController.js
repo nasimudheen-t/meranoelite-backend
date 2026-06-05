@@ -8,9 +8,8 @@ const path = require('path');
  */
 const addProduct = async (req, res) => {
   try {
-    const { product_name, product_description, category } = req.body;
-console.log("BODY:", req.body);
-console.log("DESC:", product_description);
+    const { product_name, product_description, category ,subcategory} = req.body;
+
     if (!product_name) {
       if (req.file) {
         fs.unlinkSync(req.file.path);
@@ -34,13 +33,14 @@ console.log("DESC:", product_description);
 
     const [result] = await db.query(
       `INSERT INTO products 
-      (product_name, product_description, product_image, category) 
-      VALUES (?, ?, ?, ?)`,
+      (product_name, product_description, product_image, category, subcategory) 
+      VALUES (?, ?, ?, ?, ?)`,
       [
         product_name,
         product_description || null,
         productImage,
-        category || null
+        category || null,
+        subcategory || null
       ]
     );
 
@@ -48,7 +48,8 @@ console.log("DESC:", product_description);
   product_name,
   product_description,
   productImage,
-  category
+  category,
+  subcategory
 });
 
     const [rows] = await db.query(
