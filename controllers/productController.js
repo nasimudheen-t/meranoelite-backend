@@ -1,6 +1,6 @@
-const db = require('../config/db');
-const fs = require('fs');
-const path = require('path');
+const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Add a new product
@@ -8,29 +8,30 @@ const path = require('path');
  */
 const addProduct = async (req, res) => {
   try {
-    const { product_name, product_description, category ,subcategory} = req.body;
+    const { product_name, product_description, category, subcategory } =
+      req.body;
 
     if (!product_name) {
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
-      console.log(req.file)
+      console.log(req.file);
 
       return res.status(400).json({
         success: false,
-        message: 'Product name is required'
+        message: "Product name is required",
       });
     }
 
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'Product image is required'
+        message: "Product image is required",
       });
     }
 
-    const productImage = `uploads/${req.file.filename}`;
-
+const productImage = req.file.path;
+    console.log(req.file);
     const [result] = await db.query(
       `INSERT INTO products 
       (product_name, product_description, product_image, category, subcategory) 
@@ -40,27 +41,26 @@ const addProduct = async (req, res) => {
         product_description || null,
         productImage,
         category || null,
-        subcategory || null
-      ]
+        subcategory || null,
+      ],
     );
 
     console.log({
-  product_name,
-  product_description,
-  productImage,
-  category,
-  subcategory
-});
+      product_name,
+      product_description,
+      productImage,
+      category,
+      subcategory,
+    });
 
-    const [rows] = await db.query(
-      'SELECT * FROM products WHERE id = ?',
-      [result.insertId]
-    );
+    const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [
+      result.insertId,
+    ]);
 
     return res.status(201).json({
       success: true,
-      message: 'Product created successfully',
-      data: rows[0]
+      message: "Product created successfully",
+      data: rows[0],
     });
   } catch (error) {
     if (req.file) {
@@ -75,7 +75,7 @@ const addProduct = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
@@ -86,17 +86,19 @@ const addProduct = async (req, res) => {
  */
 const getAllProducts = async (req, res) => {
   try {
-    const [products] = await db.query('SELECT * FROM products ORDER BY created_at DESC');
+    const [products] = await db.query(
+      "SELECT * FROM products ORDER BY created_at DESC",
+    );
     return res.status(200).json({
       success: true,
-      message: 'Products retrieved successfully',
-      data: products
+      message: "Products retrieved successfully",
+      data: products,
     });
   } catch (error) {
-    console.error('Error in getAllProducts:', error);
+    console.error("Error in getAllProducts:", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
@@ -108,25 +110,25 @@ const getAllProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await db.query('SELECT * FROM products WHERE id = ?', [id]);
+    const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
 
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Product retrieved successfully',
-      data: rows[0]
+      message: "Product retrieved successfully",
+      data: rows[0],
     });
   } catch (error) {
-    console.error('Error in getProductById:', error);
+    console.error("Error in getProductById:", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
@@ -139,16 +141,9 @@ const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const {
-      product_name,
-      product_description,
-      category
-    } = req.body;
+    const { product_name, product_description, category } = req.body;
 
-    const [rows] = await db.query(
-      'SELECT * FROM products WHERE id = ?',
-      [id]
-    );
+    const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
 
     if (rows.length === 0) {
       if (req.file) {
@@ -157,7 +152,7 @@ const updateProduct = async (req, res) => {
 
       return res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
     }
 
@@ -172,9 +167,7 @@ const updateProduct = async (req, res) => {
     }
 
     const updatedName =
-      product_name !== undefined
-        ? product_name
-        : currentProduct.product_name;
+      product_name !== undefined ? product_name : currentProduct.product_name;
 
     const updatedDescription =
       product_description !== undefined
@@ -182,9 +175,7 @@ const updateProduct = async (req, res) => {
         : currentProduct.product_description;
 
     const updatedCategory =
-      category !== undefined
-        ? category
-        : currentProduct.category;
+      category !== undefined ? category : currentProduct.category;
 
     if (!updatedName) {
       if (req.file) {
@@ -193,7 +184,7 @@ const updateProduct = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-        message: 'Product name cannot be empty'
+        message: "Product name cannot be empty",
       });
     }
 
@@ -204,21 +195,11 @@ const updateProduct = async (req, res) => {
            product_image = ?,
            category = ?
        WHERE id = ?`,
-      [
-        updatedName,
-        updatedDescription,
-        productImage,
-        updatedCategory,
-        id
-      ]
+      [updatedName, updatedDescription, productImage, updatedCategory, id],
     );
 
     if (oldImageToDelete) {
-      const oldImagePath = path.join(
-        __dirname,
-        '..',
-        oldImageToDelete
-      );
+      const oldImagePath = path.join(__dirname, "..", oldImageToDelete);
 
       if (fs.existsSync(oldImagePath)) {
         fs.unlink(oldImagePath, (err) => {
@@ -230,14 +211,14 @@ const updateProduct = async (req, res) => {
     }
 
     const [updatedRows] = await db.query(
-      'SELECT * FROM products WHERE id = ?',
-      [id]
+      "SELECT * FROM products WHERE id = ?",
+      [id],
     );
 
     return res.status(200).json({
       success: true,
-      message: 'Product updated successfully',
-      data: updatedRows[0]
+      message: "Product updated successfully",
+      data: updatedRows[0],
     });
   } catch (error) {
     if (req.file) {
@@ -252,7 +233,7 @@ const updateProduct = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
@@ -266,37 +247,37 @@ const deleteProduct = async (req, res) => {
     const { id } = req.params;
 
     // Check if the product exists
-    const [rows] = await db.query('SELECT * FROM products WHERE id = ?', [id]);
+    const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
     }
 
     const product = rows[0];
 
     // Delete product from database
-    await db.query('DELETE FROM products WHERE id = ?', [id]);
+    await db.query("DELETE FROM products WHERE id = ?", [id]);
 
     // Delete associated image file from filesystem
-    const imagePath = path.join(__dirname, '..', product.product_image);
+    const imagePath = path.join(__dirname, "..", product.product_image);
     if (fs.existsSync(imagePath)) {
       fs.unlink(imagePath, (err) => {
-        if (err) console.error('Error deleting image file:', err);
+        if (err) console.error("Error deleting image file:", err);
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Product deleted successfully',
-      data: {}
+      message: "Product deleted successfully",
+      data: {},
     });
   } catch (error) {
-    console.error('Error in deleteProduct:', error);
+    console.error("Error in deleteProduct:", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
@@ -306,5 +287,5 @@ module.exports = {
   getAllProducts,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 };
