@@ -12,46 +12,39 @@ const addProduct = async (req, res) => {
       req.body;
 
     if (!product_name) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
-      console.log(req.file);
-
       return res.status(400).json({
         success: false,
         message: "Product name is required",
       });
     }
 
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Product image is required",
+        message: "At least one product image is required",
       });
     }
 
-const productImage = req.file.path;
-    console.log(req.file);
+    const productImages = req.files.map((file) => file.path);
+
     const [result] = await db.query(
-      `INSERT INTO products 
-      (product_name, product_description, product_image, category, subcategory) 
+      `INSERT INTO products
+      (
+        product_name,
+        product_description,
+        product_images,
+        category,
+        subcategory
+      )
       VALUES (?, ?, ?, ?, ?)`,
       [
         product_name,
         product_description || null,
-        productImage,
+        JSON.stringify(productImages),
         category || null,
         subcategory || null,
       ],
     );
-
-    console.log({
-      product_name,
-      product_description,
-      productImage,
-      category,
-      subcategory,
-    });
 
     const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [
       result.insertId,
@@ -63,14 +56,6 @@ const productImage = req.file.path;
       data: rows[0],
     });
   } catch (error) {
-    if (req.file) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
     console.error(error);
 
     return res.status(500).json({
