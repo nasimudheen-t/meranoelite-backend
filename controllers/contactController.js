@@ -15,7 +15,6 @@ const sendContactMail = async (req, res) => {
       },
     });
 
-    console.log("Email sent successfully");
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
@@ -32,6 +31,8 @@ const sendContactMail = async (req, res) => {
   <p><b>Message:</b> ${message}</p>
 `,
     });
+
+    console.log("Email sent successfully");
 
     res.status(200).json({
       success: true,
