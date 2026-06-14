@@ -9,7 +9,7 @@ const sendContactMail = async (req, res) => {
     const data = await resend.emails.send({
       from: "onboarding@resend.dev",
       to: "info@meranoelite.com", // your receiving email
-      subject: "New Contact Form Submission",
+      subject: `New Contact Form | ${firstName} ${lastName} | ${new Date().toLocaleString()}`, 
       html: `
         <h2>New Contact Form Submission</h2>
 
