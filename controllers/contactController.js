@@ -2,25 +2,25 @@ const nodemailer = require("nodemailer");
 
 const sendContactMail = async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      projectSubject,
-      message,
-    } = req.body;
+    const { firstName, lastName, email, projectSubject, message } = req.body;
 
     console.log("Contact request received");
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
     });
+
+    await transporter.verify();
+console.log("SMTP Connected");
 
     console.log("Before sendMail");
 
