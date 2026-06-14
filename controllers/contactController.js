@@ -5,6 +5,8 @@ const sendContactMail = async (req, res) => {
     const { firstName, lastName, name, email, phone, projectSubject, message } =
       req.body;
 
+    console.log("Contact request received");
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -13,8 +15,9 @@ const sendContactMail = async (req, res) => {
       },
     });
 
+    console.log("Email sent successfully");
     await transporter.sendMail({
-      from: process.env.EMAIL_USER, 
+      from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "New Contact Form Submission",
       html: `
