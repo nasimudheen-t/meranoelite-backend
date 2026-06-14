@@ -7,7 +7,7 @@ const sendContactMail = async (req, res) => {
     const { firstName, lastName, email, projectSubject, message } = req.body;
 
     const data = await resend.emails.send({
-      from: "contact@meranoelite.com",
+      from: "onboarding@resend.dev",
       to: "info@meranoelite.com", // your receiving email
       subject: "New Contact Form Submission",
       html: `
