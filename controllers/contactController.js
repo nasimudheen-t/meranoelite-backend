@@ -2,48 +2,62 @@ const nodemailer = require("nodemailer");
 
 const sendContactMail = async (req, res) => {
   try {
-    const { firstName, lastName, name, email, phone, projectSubject, message } =
-      req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      projectSubject,
+      message,
+    } = req.body;
 
     console.log("Contact request received");
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
 
+    console.log("Before sendMail");
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "New Contact Form Submission",
       html: `
-  <h2>New Contact Form Submission</h2>
+        <h2>New Contact Form Submission</h2>
 
-  <p><b>First Name:</b> ${firstName}</p>
-  <p><b>Last Name:</b> ${lastName}</p>
-  <p><b>Email:</b> ${email}</p>
+        <p><strong>First Name:</strong> ${firstName}</p>
+        <p><strong>Last Name:</strong> ${lastName}</p>
+        <p><strong>Email:</strong> ${email}</p>
 
-  ${projectSubject ? `<p><b>Project Subject:</b> ${projectSubject}</p>` : ""}
+        ${
+          projectSubject
+            ? `<p><strong>Project Subject:</strong> ${projectSubject}</p>`
+            : ""
+        }
 
-  <p><b>Message:</b> ${message}</p>
-`,
+        <p><strong>Message:</strong> ${message}</p>
+      `,
     });
 
-    console.log("Email sent successfully");
+    console.log("After sendMail");
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Email sent successfully",
     });
   } catch (error) {
-    console.error(error);
+    console.error("EMAIL ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Email failed",
+      message: error.message,
+      error: error,
     });
   }
 };
