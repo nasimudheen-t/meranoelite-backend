@@ -1,63 +1,36 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendContactMail = async (req, res) => {
   try {
     const { firstName, lastName, email, projectSubject, message } = req.body;
 
-    console.log("Contact request received");
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-    });
-
-    await transporter.verify();
-console.log("SMTP Connected");
-
-    console.log("Before sendMail");
-
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
+    const data = await resend.emails.send({
+      from: "contact@meranoelite.com",
+      to: "info@meranoelite.com", // your receiving email
       subject: "New Contact Form Submission",
       html: `
         <h2>New Contact Form Submission</h2>
 
-        <p><strong>First Name:</strong> ${firstName}</p>
-        <p><strong>Last Name:</strong> ${lastName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-
-        ${
-          projectSubject
-            ? `<p><strong>Project Subject:</strong> ${projectSubject}</p>`
-            : ""
-        }
-
-        <p><strong>Message:</strong> ${message}</p>
+        <p><b>First Name:</b> ${firstName}</p>
+        <p><b>Last Name:</b> ${lastName}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Project Subject:</b> ${projectSubject}</p>
+        <p><b>Message:</b> ${message}</p>
       `,
     });
 
-    console.log("After sendMail");
-
     return res.status(200).json({
       success: true,
-      message: "Email sent successfully",
+      data,
     });
   } catch (error) {
-    console.error("EMAIL ERROR:", error);
+    console.error(error);
 
     return res.status(500).json({
       success: false,
       message: error.message,
-      error: error,
     });
   }
 };
