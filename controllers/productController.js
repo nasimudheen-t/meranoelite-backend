@@ -310,11 +310,22 @@ const updateProduct = async (req, res) => {
         ? [req.body.replaceIndexes]
         : [];
 
-    req.files.forEach((file, i) => {
-      const index = parseInt(replaceIndexes[i]);
+    // Replace only selected images
+    if (req.files && req.files.length > 0) {
+      const replaceIndexes = Array.isArray(req.body.replaceIndexes)
+        ? req.body.replaceIndexes
+        : req.body.replaceIndexes
+          ? [req.body.replaceIndexes]
+          : [];
 
-      updatedImages[index] = file.path;
-    });
+      req.files.forEach((file, i) => {
+        const index = Number(replaceIndexes[i]);
+
+        if (!isNaN(index)) {
+          updatedImages[index] = file.path;
+        }
+      });
+    }
     const updatedName = product_name ?? currentProduct.product_name;
 
     const updatedDescription =
@@ -353,16 +364,16 @@ const updateProduct = async (req, res) => {
       message: "Product updated successfully",
       data: updatedRows[0],
     });
-  }catch (error) {
-  console.error("========== UPDATE ERROR ==========");
-  console.error(error);
-  console.error(error.stack);
+  } catch (error) {
+    console.error("========== UPDATE ERROR ==========");
+    console.error(error);
+    console.error(error.stack);
 
-  return res.status(500).json({
-    success: false,
-    message: error.message,
-  });
-}
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 //   try {
 //     const { id } = req.params;
