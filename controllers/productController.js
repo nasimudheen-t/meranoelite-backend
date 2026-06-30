@@ -126,7 +126,8 @@ const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { product_name, product_description, category } = req.body;
+    const { product_name, product_description, category, subcategory } =
+      req.body;
 
     const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
 
@@ -162,6 +163,9 @@ const updateProduct = async (req, res) => {
     const updatedCategory =
       category !== undefined ? category : currentProduct.category;
 
+    const updatedSubcategory =
+      subcategory !== undefined ? subcategory : currentProduct.subcategory;
+
     if (!updatedName) {
       if (req.file) {
         fs.unlinkSync(req.file.path);
@@ -175,12 +179,20 @@ const updateProduct = async (req, res) => {
 
     await db.query(
       `UPDATE products
-       SET product_name = ?,
-           product_description = ?,
-           product_image = ?,
-           category = ?
-       WHERE id = ?`,
-      [updatedName, updatedDescription, productImage, updatedCategory, id],
+   SET product_name = ?,
+       product_description = ?,
+       product_image = ?,
+       category = ?,
+       subcategory = ?
+   WHERE id = ?`,
+      [
+        updatedName,
+        updatedDescription,
+        productImage,
+        updatedCategory,
+        updatedSubcategory,
+        id,
+      ],
     );
 
     if (oldImageToDelete) {
