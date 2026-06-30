@@ -289,22 +289,34 @@ const updateProduct = async (req, res) => {
 
     const currentProduct = rows[0];
     console.log("Raw DB value:", currentProduct.product_images);
+           console.log(typeof currentProduct.product_images);
 
     // Parse existing images
     let existingImages = [];
 
     try {
-      existingImages = currentProduct.product_images
-        ? JSON.parse(currentProduct.product_images)
-        : [];
+      if (Array.isArray(currentProduct.product_images)) {
+        // Already an array
+        existingImages = currentProduct.product_images;
+      } else if (typeof currentProduct.product_images === "string") {
+        // Stored as JSON string
+        existingImages = JSON.parse(currentProduct.product_images);
+      } else {
+        existingImages = [];
+      }
     } catch (err) {
+      console.error("Image parse error:", err);
       existingImages = [];
     }
-console.log("Existing Images:", existingImages);
+
+    console.log("Existing Images:", existingImages);
+
+    console.log("Existing Images:", existingImages);
+    console.log("Existing Images:", existingImages);
     // If new images uploaded, replace old images
     // Otherwise keep existing images
     let updatedImages = [...existingImages];
-console.log("Updated Images:", updatedImages);
+    console.log("Updated Images:", updatedImages);
     const replaceIndexes = Array.isArray(req.body.replaceIndexes)
       ? req.body.replaceIndexes
       : req.body.replaceIndexes
@@ -312,6 +324,7 @@ console.log("Updated Images:", updatedImages);
         : [];
 
     // Replace only selected images
+   
     if (req.files && req.files.length > 0) {
       const replaceIndexes = Array.isArray(req.body.replaceIndexes)
         ? req.body.replaceIndexes
@@ -335,6 +348,7 @@ console.log("Updated Images:", updatedImages);
     const updatedCategory = category ?? currentProduct.category;
 
     const updatedSubcategory = subcategory ?? currentProduct.subcategory;
+    
 
     await db.query(
       `UPDATE products
