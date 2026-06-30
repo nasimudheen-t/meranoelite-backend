@@ -22,7 +22,7 @@ router.get("/", getAllProducts);
 router.get("/:id", getProductById);
 
 // Update Product route (Accepts optional product_image file upload replacement)
-router.put("/:id", verifyToken, upload.single("product_image"), updateProduct);
+router.put("/:id", verifyToken, upload.array("product_images", 3), updateProduct);
 
 // Delete Product route
 router.delete("/:id", verifyToken, deleteProduct);
