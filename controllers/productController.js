@@ -125,17 +125,22 @@ const getProductById = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    const { product_name, product_description, category, subcategory } = req.body;
 
-    const { product_name, product_description, category, subcategory } =
-      req.body;
-
+    // Get current product
     const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
 
     if (rows.length === 0) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
+      // Clean up uploaded files if product not found
+      if (req.files && req.files.length > 0) {
+        req.files.forEach(file => {
+          try {
+            fs.unlinkSync(file.path);
+          } catch (err) {
+            console.error(err);
+          }
+        });
       }
-
       return res.status(404).json({
         success: false,
         message: "Product not found",
@@ -143,73 +148,102 @@ const updateProduct = async (req, res) => {
     }
 
     const currentProduct = rows[0];
-
-    let productImage = currentProduct.product_image;
-    let oldImageToDelete = null;
-
-    if (req.file) {
-      productImage = `uploads/${req.file.filename}`;
-      oldImageToDelete = currentProduct.product_image;
+    
+    // Parse existing images (handle both string and array)
+    let existingImages = [];
+    try {
+      if (currentProduct.product_images) {
+        existingImages = typeof currentProduct.product_images === 'string' 
+          ? JSON.parse(currentProduct.product_images) 
+          : currentProduct.product_images;
+      }
+    } catch (e) {
+      existingImages = [];
     }
 
-    const updatedName =
-      product_name !== undefined ? product_name : currentProduct.product_name;
+    // Handle multiple images
+    let oldImagesToDelete = [];
+    let newImages = [];
 
-    const updatedDescription =
-      product_description !== undefined
-        ? product_description
-        : currentProduct.product_description;
+    if (req.files && req.files.length > 0) {
+      // Save old images for deletion
+      oldImagesToDelete = [...existingImages];
+      
+      // Create new image paths
+      newImages = req.files.map(file => `uploads/${file.filename}`);
+      
+      // Combine: Keep existing images that weren't replaced + new ones
+      // Note: If you want to replace all images, use only newImages
+      // If you want to add to existing, uncomment the line below
+      // newImages = [...existingImages, ...newImages];
+    } else {
+      // If no new files, keep existing images
+      newImages = existingImages;
+    }
 
-    const updatedCategory =
-      category !== undefined ? category : currentProduct.category;
+    // Update fields
+    const updatedName = product_name !== undefined ? product_name : currentProduct.product_name;
+    const updatedDescription = product_description !== undefined 
+      ? product_description 
+      : currentProduct.product_description;
+    const updatedCategory = category !== undefined ? category : currentProduct.category;
+    const updatedSubcategory = subcategory !== undefined ? subcategory : currentProduct.subcategory;
 
-    const updatedSubcategory =
-      subcategory !== undefined ? subcategory : currentProduct.subcategory;
-
+    // Validate product name
     if (!updatedName) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
+      // Clean up uploaded files
+      if (req.files && req.files.length > 0) {
+        req.files.forEach(file => {
+          try {
+            fs.unlinkSync(file.path);
+          } catch (err) {
+            console.error(err);
+          }
+        });
       }
-
       return res.status(400).json({
         success: false,
         message: "Product name cannot be empty",
       });
     }
 
+    // Update database with JSON array of images
     await db.query(
       `UPDATE products
-   SET product_name = ?,
-       product_description = ?,
-       product_image = ?,
-       category = ?,
-       subcategory = ?
-   WHERE id = ?`,
+       SET product_name = ?,
+           product_description = ?,
+           product_images = ?,
+           category = ?,
+           subcategory = ?
+       WHERE id = ?`,
       [
         updatedName,
         updatedDescription,
-        productImage,
+        JSON.stringify(newImages),
         updatedCategory,
         updatedSubcategory,
         id,
-      ],
+      ]
     );
 
-    if (oldImageToDelete) {
-      const oldImagePath = path.join(__dirname, "..", oldImageToDelete);
-
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlink(oldImagePath, (err) => {
-          if (err) {
-            console.error(err);
-          }
-        });
-      }
+    // Delete old images from filesystem
+    if (oldImagesToDelete.length > 0) {
+      oldImagesToDelete.forEach(oldImage => {
+        const oldImagePath = path.join(__dirname, "..", oldImage);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlink(oldImagePath, (err) => {
+            if (err) {
+              console.error("Error deleting old image:", err);
+            }
+          });
+        }
+      });
     }
 
+    // Fetch updated product
     const [updatedRows] = await db.query(
       "SELECT * FROM products WHERE id = ?",
-      [id],
+      [id]
     );
 
     return res.status(200).json({
@@ -218,16 +252,18 @@ const updateProduct = async (req, res) => {
       data: updatedRows[0],
     });
   } catch (error) {
-    if (req.file) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (err) {
-        console.error(err);
-      }
+    // Clean up uploaded files on error
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        try {
+          fs.unlinkSync(file.path);
+        } catch (err) {
+          console.error(err);
+        }
+      });
     }
 
-    console.error(error);
-
+    console.error("Update product error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
