@@ -288,6 +288,7 @@ const updateProduct = async (req, res) => {
     }
 
     const currentProduct = rows[0];
+    console.log("Raw DB value:", currentProduct.product_images);
 
     // Parse existing images
     let existingImages = [];
@@ -299,11 +300,11 @@ const updateProduct = async (req, res) => {
     } catch (err) {
       existingImages = [];
     }
-
+console.log("Existing Images:", existingImages);
     // If new images uploaded, replace old images
     // Otherwise keep existing images
     let updatedImages = [...existingImages];
-
+console.log("Updated Images:", updatedImages);
     const replaceIndexes = Array.isArray(req.body.replaceIndexes)
       ? req.body.replaceIndexes
       : req.body.replaceIndexes
