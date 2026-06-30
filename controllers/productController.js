@@ -353,14 +353,16 @@ const updateProduct = async (req, res) => {
       message: "Product updated successfully",
       data: updatedRows[0],
     });
-  } catch (error) {
-    console.error("Update product error:", error);
+  }catch (error) {
+  console.error("========== UPDATE ERROR ==========");
+  console.error(error);
+  console.error(error.stack);
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
+  return res.status(500).json({
+    success: false,
+    message: error.message,
+  });
+}
 };
 //   try {
 //     const { id } = req.params;
