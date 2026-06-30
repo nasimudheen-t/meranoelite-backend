@@ -274,18 +274,11 @@ const getProductById = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      product_name,
-      product_description,
-      category,
-      subcategory,
-    } = req.body;
+    const { product_name, product_description, category, subcategory } =
+      req.body;
 
     // Get current product
-    const [rows] = await db.query(
-      "SELECT * FROM products WHERE id = ?",
-      [id]
-    );
+    const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -309,22 +302,27 @@ const updateProduct = async (req, res) => {
 
     // If new images uploaded, replace old images
     // Otherwise keep existing images
-    const updatedImages =
-      req.files && req.files.length > 0
-        ? req.files.map((file) => file.path)
-        : existingImages;
+    let updatedImages = [...existingImages];
 
-    const updatedName =
-      product_name ?? currentProduct.product_name;
+    const replaceIndexes = Array.isArray(req.body.replaceIndexes)
+      ? req.body.replaceIndexes
+      : req.body.replaceIndexes
+        ? [req.body.replaceIndexes]
+        : [];
+
+    req.files.forEach((file, i) => {
+      const index = parseInt(replaceIndexes[i]);
+
+      updatedImages[index] = file.path;
+    });
+    const updatedName = product_name ?? currentProduct.product_name;
 
     const updatedDescription =
       product_description ?? currentProduct.product_description;
 
-    const updatedCategory =
-      category ?? currentProduct.category;
+    const updatedCategory = category ?? currentProduct.category;
 
-    const updatedSubcategory =
-      subcategory ?? currentProduct.subcategory;
+    const updatedSubcategory = subcategory ?? currentProduct.subcategory;
 
     await db.query(
       `UPDATE products
@@ -342,12 +340,12 @@ const updateProduct = async (req, res) => {
         updatedCategory,
         updatedSubcategory,
         id,
-      ]
+      ],
     );
 
     const [updatedRows] = await db.query(
       "SELECT * FROM products WHERE id = ?",
-      [id]
+      [id],
     );
 
     return res.status(200).json({
